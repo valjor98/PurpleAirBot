@@ -3,7 +3,25 @@ import sqlite3
 import pandas as pd
 import time
 
+# Function to get sensor data from PurpleAir API
+def getSensorsData(sensor_ids, fields):
+    base_url = "https://api.purpleair.com/v1/sensors/"
+    api_key = "" # TODO change to be en env variable  
+    data_frames = []
 
+    for sensor_id in sensor_ids:
+        url = f"{base_url}{sensor_id}?api_key={api_key}"
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            sensor_data = response.json()["sensor"]
+            selected_data = {field: sensor_data.get(field) for field in fields}
+            df = pd.DataFrame([selected_data])
+            data_frames.append(df)
+        else:
+            print(f"Bad response for sensor {sensor_id}: {response.status_code}")
+
+    return pd.concat(data_frames, ignore_index=True)
 
 # Function to filter out sensor data that's older than a certain time
 def AGEfilter(df, max_minutes):
@@ -45,7 +63,6 @@ while True:
     df = pd.DataFrame(sensor_data)
     filtered_data = AGEfilter(df, 20)
     # Insert data into SQLite database
-    print("data:", conn)
     filtered_data.to_sql("SensorData", conn, if_exists="append", index=False)
     print("Data inserted into database.")
 
@@ -53,7 +70,7 @@ while True:
     cursor.execute("SELECT * FROM SensorData ORDER BY id DESC LIMIT 5")
     rows = cursor.fetchall()
 
-    # Print the fetched records
+    # print the fetched data every time there's an insert
     for row in rows:
         print(row)
     time.sleep(1800)  # Wait for 30 minutes
