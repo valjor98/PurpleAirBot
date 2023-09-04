@@ -4,6 +4,24 @@ import pandas as pd
 import time
 
 
+
+# Function to filter out sensor data that's older than a certain time
+def AGEfilter(df, max_minutes):
+    # Convert Unix timestamps to timezone-aware datetime objects
+    df['last_seen'] = pd.to_datetime(df['last_seen'], unit='s').dt.tz_localize('UTC')
+
+    # Compute the age in minutes
+    df['age'] = (pd.Timestamp.now(tz='UTC') - df['last_seen']).dt.total_seconds() / 60
+
+    # Filter based on age
+    return df[df['age'] <= max_minutes]
+
+
+
+# List of sensor IDs and fields
+sensor_ids = ["36721"]  # TODO change to sensors we want
+fields = ["last_seen", "pm2_5_60minute_a", "pm2_5_60minute_b", "temperature_a", "humidity_a", "pressure_a"]
+
 # Pull data every 30 minutes
 while True:
     # Fetch data from PurpleAir API
