@@ -16,7 +16,22 @@ def AGEfilter(df, max_minutes):
     # Filter based on age
     return df[df['age'] <= max_minutes]
 
-
+# Initialize SQLite database
+conn = sqlite3.connect("purpleair_data.db")
+cursor = conn.cursor()
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS SensorData (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    last_seen DATETIME,
+    pm2_5_60minute_a REAL,
+    pm2_5_60minute_b REAL,
+    temperature_a REAL,
+    humidity_a REAL,
+    pressure_a REAL,
+    age REAL
+)
+''')
+conn.commit()
 
 # List of sensor IDs and fields
 sensor_ids = ["36721"]  # TODO change to sensors we want
