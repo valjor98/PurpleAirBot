@@ -1,6 +1,3 @@
-#      
-
-
 import requests
 import sqlite3
 import pandas as pd
@@ -29,6 +26,19 @@ field_mapping = {
     "humidity_a": "humidity_a",
     "pressure_a": "pressure_a"
 }
+
+excel_path = "purpleair_data.xlsx"
+
+def save_to_excel(df, excel_path):
+    # Check if the Excel file already exists
+    try:
+        existing_df = pd.read_excel(excel_path)
+        df = pd.concat([existing_df, df], ignore_index=True)
+    except FileNotFoundError:
+        pass  # File does not exist, so we will create it
+
+    df.to_excel(excel_path, index=False)
+
 
 # Function to get sensor data from PurpleAir API
 def getSensorsData(sensor_ids, fields):
@@ -99,7 +109,11 @@ while True:
     filtered_data.to_sql("SensorData", conn, if_exists="append", index=False)
     print("Data inserted into database.")
 
-    cursor.execute("SELECT * FROM SensorData ORDER BY id DESC LIMIT 5")
+    # Save data to Excel file
+    save_to_excel(filtered_data, excel_path)
+    print(f"Data saved to {excel_path}.")
+
+    cursor.execute("SELECT * FROM SensorData ORDER BY id DESC")
     rows = cursor.fetchall()
 
     for row in rows:
